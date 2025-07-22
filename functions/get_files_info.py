@@ -6,9 +6,8 @@ def get_files_info(working_directory, directory="."):
             return f"Result for {dir_name} directory:\n"
         return "Result for current directory:\n"
     
-    def traverse_dir_content(dir_path, depth=0):
+    def traverse_dir_content(dir_path):
         result = ""
-        # indent = "  " * depth  # Uncomment for indented output when using recursion
         
         for entry_name in os.listdir(dir_path):
             entry_path = os.path.join(dir_path, entry_name)
@@ -16,14 +15,8 @@ def get_files_info(working_directory, directory="."):
                 stat_info = os.stat(entry_path)
                 is_dir = os.path.isdir(entry_path)
                 result += f" - {entry_name}: file_size={stat_info.st_size} bytes, is_dir={is_dir}\n"
-                # result += f"{indent} - {entry_name}: file_size={stat_info.st_size} bytes, is_dir={is_dir}\n"  # Use this line for indented output
-                
-                # Uncomment the lines below to enable recursive directory traversal with proper indentation
-                # if is_dir:
-                #     result += traverse_dir_content(entry_path, depth + 1)
             except (OSError, PermissionError) as e:
                 result += f" - {entry_name}: Error accessing - {e}\n"
-                # result += f"{indent} - {entry_name}: Error accessing - {e}\n"  # Use this line for indented output
        
         return result
     
@@ -46,3 +39,25 @@ def get_files_info(working_directory, directory="."):
         return format_result_header(directory) + traverse_dir_content(abs_target_path)
     except Exception as e:
         return f"Error: {e}"
+    
+
+
+# if u need to traverse all the contents of all the sub directories do this instead
+
+# def traverse_dir_content(dir_path, depth=0):
+#         result = ""
+#         indent = "  " * depth 
+        
+#         for entry_name in os.listdir(dir_path):
+#             entry_path = os.path.join(dir_path, entry_name)
+#             try:
+#                 stat_info = os.stat(entry_path)
+#                 is_dir = os.path.isdir(entry_path)
+#                 result += f"{indent} - {entry_name}: file_size={stat_info.st_size} bytes, is_dir={is_dir}\n"
+                
+#                 if is_dir:
+#                     result += traverse_dir_content(entry_path, depth + 1)
+#             except (OSError, PermissionError) as e:
+#                 result += f"{indent} - {entry_name}: Error accessing - {e}\n"  # Use this line for indented output
+       
+#         return result
