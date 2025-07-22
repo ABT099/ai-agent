@@ -1,5 +1,7 @@
 import os
 
+from functions.path_helpers import check_path, get_abs_target_path
+
 def get_files_info(working_directory, directory="."):
     def format_result_header(dir_name):
         if directory != ".":
@@ -20,23 +22,13 @@ def get_files_info(working_directory, directory="."):
        
         return result
     
-    if directory == ".":
-        target_path = working_directory
-    else:
-        target_path = os.path.join(working_directory, directory)
-    
-    abs_target_path = os.path.abspath(target_path)
-    
-    if not os.path.isdir(abs_target_path):
-        return f'Error: "{directory}" is not a directory'
-   
-    abs_target_path = os.path.abspath(target_path)
-    abs_working_dir = os.path.abspath(working_directory)
-    if not abs_target_path.startswith(abs_working_dir):
-        return f'Error: Cannot list "{directory}" as it is outside the permitted working directory'
-    
+    err = check_path(working_directory, directory);
+
+    if err != None:
+        return err
+
     try:
-        return format_result_header(directory) + traverse_dir_content(abs_target_path)
+        return format_result_header(directory) + traverse_dir_content(get_abs_target_path(working_directory, directory))
     except Exception as e:
         return f"Error: {e}"
     
