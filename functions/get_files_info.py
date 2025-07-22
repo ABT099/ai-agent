@@ -1,6 +1,6 @@
 import os
 
-from functions.path_helpers import check_path, get_abs_target_path
+from functions.path_helpers import check_path
 
 def get_files_info(working_directory, directory="."):
     def format_result_header(dir_name):
@@ -22,13 +22,13 @@ def get_files_info(working_directory, directory="."):
        
         return result
     
-    err = check_path(working_directory, directory);
+    err, abs_target_path = check_path(working_directory, directory);
 
     if err != None:
         return err
 
     try:
-        return format_result_header(directory) + traverse_dir_content(get_abs_target_path(working_directory, directory))
+        return format_result_header(directory) + traverse_dir_content(abs_target_path)
     except Exception as e:
         return f"Error: {e}"
     
