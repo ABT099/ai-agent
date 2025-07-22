@@ -1,6 +1,6 @@
 import os
 
-from functions.path_helpers import check_path
+from functions.check_path import check_path
 
 def get_files_info(working_directory, directory="."):
     def format_result_header(dir_name):

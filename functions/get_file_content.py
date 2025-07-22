@@ -1,7 +1,7 @@
 import os
 
 from config import MAX_FILE_READ_CHARS
-from functions.path_helpers import check_path, PathType
+from functions.check_path import check_path, PathType
 
 def get_file_content(working_directory, file_path):
     err, abs_target_path = check_path(working_directory, file_path, PathType.FILE);

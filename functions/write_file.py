@@ -1,5 +1,5 @@
 
-from functions.path_helpers import PathType, check_path
+from functions.check_path import PathType, check_path
 
 
 def write_file(working_directory, file_path, content):
