@@ -1,10 +1,10 @@
 import subprocess
 from google.genai import types
-from functions.check_path import PathType, check_path
+from functions.check_path import Options, PathType, check_path
 import sys
 
 def run_python_file(working_directory, file_path, args=[]):
-    err, abs_target_path = check_path(working_directory, file_path, PathType.FILE, exec_python=True)
+    err, abs_target_path = check_path(working_directory, file_path, PathType.FILE, options=Options.EXECUTE_PYTHON)
     
     if err != None:
         return err
