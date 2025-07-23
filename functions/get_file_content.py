@@ -1,5 +1,5 @@
 import os
-
+from google.genai import types
 from config import MAX_FILE_READ_CHARS
 from functions.check_path import check_path, PathType
 
@@ -16,3 +16,17 @@ def get_file_content(working_directory, file_path):
         file_content_string += f'[...File "{file_path}" truncated at {MAX_FILE_READ_CHARS} characters]'
 
     return file_content_string
+
+schema_get_file_content = types.FunctionDeclaration(
+    name="get_file_content",
+    description="Reads a specific file and returns it's content",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description="The path that the file exists in, relative to the working directory."
+            ),
+        },
+    ),
+)

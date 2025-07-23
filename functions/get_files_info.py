@@ -1,4 +1,5 @@
 import os
+from google.genai import types
 
 from functions.check_path import check_path
 
@@ -33,23 +34,16 @@ def get_files_info(working_directory, directory="."):
         return f"Error: {e}"
     
 
-
-# if u need to traverse all the contents of all the sub directories do this instead
-
-# def traverse_dir_content(dir_path, depth=0):
-#         result = ""
-#         indent = "  " * depth 
-        
-#         for entry_name in os.listdir(dir_path):
-#             entry_path = os.path.join(dir_path, entry_name)
-#             try:
-#                 stat_info = os.stat(entry_path)
-#                 is_dir = os.path.isdir(entry_path)
-#                 result += f"{indent} - {entry_name}: file_size={stat_info.st_size} bytes, is_dir={is_dir}\n"
-                
-#                 if is_dir:
-#                     result += traverse_dir_content(entry_path, depth + 1)
-#             except (OSError, PermissionError) as e:
-#                 result += f"{indent} - {entry_name}: Error accessing - {e}\n"  # Use this line for indented output
-       
-#         return result
+schema_get_files_info = types.FunctionDeclaration(
+    name="get_files_info",
+    description="Lists files in the specified directory along with their sizes, constrained to the working directory.",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "directory": types.Schema(
+                type=types.Type.STRING,
+                description="The directory to list files from, relative to the working directory. If not provided, lists files in the working directory itself.",
+            ),
+        },
+    ),
+)
