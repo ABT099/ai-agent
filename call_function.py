@@ -1,4 +1,5 @@
 
+from config import WORKING_DIRECTORY
 from functions.get_file_content import get_file_content
 from functions.get_files_info import get_files_info
 from functions.run_python import run_python_file
@@ -14,7 +15,7 @@ def call_function(function_call_part, verbose=False):
         print(f" - Calling function: {function_name}")
     
     args = function_call_part.args
-    args["working_directory"] = "./calculator" 
+    args["working_directory"] = WORKING_DIRECTORY
 
     func_dict = {
         "get_file_content": get_file_content,

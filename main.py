@@ -1,27 +1,22 @@
 import os
+import sys
 from call_function import call_function
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-import sys
 from functions.get_file_content import schema_get_file_content
 from functions.get_files_info import schema_get_files_info
 from functions.run_python import schema_run_python_file
 from functions.write_file import schema_write_file
 from config import MODEL_NAME, SYSTEM_PROMPT, MAX_FILE_READ_CHARS
+from ui import (
+    console, print_header, print_thinking, print_function_call,
+    print_iteration_info, print_final_response, print_error,
+    print_warning, print_success, print_info, get_user_input
+)
 
-def main():
-    load_dotenv()
-    api_key = os.environ.get("GEMINI_API_KEY")
-    client = genai.Client(api_key=api_key)
-    
-    if len(sys.argv) < 2 or len(sys.argv) > 3:
-        print("please input a valid prompt")
-        sys.exit(1)
-    
-    prompt = sys.argv[1]
-    verbose = "--verbose" in sys.argv
-    
+def process_query(client, prompt: str, verbose: bool):
+    """Process a single query and return success status"""
     messages = [
         types.Content(role="user", parts=[types.Part(text=prompt)]),
     ]
@@ -37,8 +32,12 @@ def main():
     
     max_iterations = 20
     
-    for iteration in range(max_iterations):
+    for iteration in range(1, max_iterations + 1):
         try:
+            if verbose:
+                print_iteration_info(iteration, max_iterations)
+            print_thinking()
+            
             response = client.models.generate_content(
                 model=MODEL_NAME,
                 contents=messages,
@@ -49,59 +48,101 @@ def main():
             )
             
             if verbose:
-                print(f"Iteration {iteration + 1}/{max_iterations}")
-                print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
-                print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
+                tokens_info = {
+                    'prompt_token_count': response.usage_metadata.prompt_token_count,
+                    'candidates_token_count': response.usage_metadata.candidates_token_count
+                }
+                print_iteration_info(iteration, max_iterations, tokens_info)
             
             messages.append(response.candidates[0].content)
             
             if response.function_calls:
-                function_call = response.function_calls[0]                
+                function_call = response.function_calls[0]
+                print_function_call(function_call.name, verbose)
+                
                 result = call_function(function_call, verbose)
                 if not result:
-                    raise Exception("fatal exception: no result found from function call")
+                    raise Exception("No result returned from function call")
                 
-                # Add function result to conversation - ensure proper format
+                # Add function result to conversation
                 if hasattr(result, 'parts') and result.parts:
                     messages.append(types.Content(role="tool", parts=result.parts))
                 else:
-                    # Fallback: create proper function response part
                     messages.append(types.Content(
-                        role="tool", 
+                        role="tool",
                         parts=[types.Part(function_response=result)]
                     ))
                 
                 if verbose:
-                    print(f"Function result: {result}")
-                    if hasattr(result, 'parts') and result.parts:
-                        print(f"Function response content: {result.parts[0].function_response.response}")
+                    print_success("Function completed")
             
-            # Check if we have a final text response (only when no function calls)
+            # Check if we have a final text response
             elif response.text and not response.function_calls:
-                print("Final response:")
-                print(response.text)
-                break
+                print_final_response(response.text)
+                return True
             
-            # If neither function calls nor pure text response
+            # Unexpected response format
             else:
-                print("Warning: Unexpected response format")
+                print_warning("Unexpected response format")
                 if verbose:
-                    print(f"Response has text: {bool(response.text)}")
-                    print(f"Response has function calls: {bool(response.function_calls)}")
-                break
+                    print_info(f"Has text: {bool(response.text)}")
+                    print_info(f"Has function calls: {bool(response.function_calls)}")
+                return False
                 
         except Exception as e:
-            print(f"Error in iteration {iteration + 1}: {e}")
+            print_error(str(e), iteration)
             if verbose:
                 import traceback
-                traceback.print_exc()
-            break
+                console.print(f"[red]{traceback.format_exc()}[/red]")
+            return False
     
-    else:
-        print(f"Maximum iterations ({max_iterations}) reached without final response")
+    print_warning(f"Reached maximum iterations ({max_iterations}) without final response")
+    return False
+
+def main():
+    try:
+        load_dotenv()
+        api_key = os.environ.get("GEMINI_API_KEY")
+        
+        if not api_key:
+            console.print("❌ [bold red]Error:[/bold red] GEMINI_API_KEY not found in environment variables")
+            console.print("💡 [yellow]Please set your API key in the .env file[/yellow]")
+            sys.exit(1)
+        
+        client = genai.Client(api_key=api_key)
+        
+        print_header()
+        
+        while True:
+            try:
+                prompt, verbose = get_user_input()
+                success = process_query(client, prompt, verbose)
+                
+                if success:
+                    print_success("Query completed successfully!")
+                else:
+                    print_warning("Query completed with issues")
+                
+                # Add separator for next query
+                console.print()
+                from rich.rule import Rule
+                console.print(Rule(style="dim"))
+                console.print()
+                
+            except KeyboardInterrupt:
+                console.print("\n[yellow]👋 Chat session ended[/yellow]")
+                break
+            except Exception as e:
+                print_error(f"Error processing query: {e}", 0)
+                console.print("[dim]Continuing to next query...[/dim]")
+                console.print()
     
-    if verbose:
-        print(f"User prompt: {prompt}")
+    except KeyboardInterrupt:
+        console.print("\n[yellow]👋 Operation cancelled by user[/yellow]")
+        sys.exit(0)
+    except Exception as e:
+        console.print(f"[bold red]❌ Fatal error:[/bold red] {e}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
