@@ -2,7 +2,7 @@
 
 A simple version of something like Cursor/Zed's Agentic Mode, or Claude Code. This is a basic demonstration of an AI coding assistant that can interact with your filesystem, please note this isn't at the level of their sophisticated agents, it's just a learning demo!
 
-*Here will be a demo gif*
+![AI-Agent Demo](assets/demo.gif)
 
 ## Features
 
